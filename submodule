@@ -2,7 +2,7 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
-#Using CORN as an example
+#Using CORN in Melk with M1 setup as an example
 
 CORN<-read.table("E:/SWAT_N_Bilanzen/Melk/Corn/corn.txt", header = T, sep = ",")
 corn_hru<-read_excel("E:/SWAT_N_Bilanzen/Melk/Melk_crop/HRU_CROP.xlsx", sheet=5)
@@ -23,3 +23,45 @@ Rwfps_daycent<- function(WFPS){
   frwfps<- 1.4/ 13^ (17 / 13^ (2.2 * WFPS))
   return(frwfps)
 }
+
+#########N2O emissions in 2006
+
+#add day number to output.hru file
+corn_2006<-corn_p[750264:779098,]
+a<-rep(1:365, each=79) #79 HURs are corn in all 2594 HRUs
+corn_2006$day<-a
+
+#add year number to output.hru file
+c<-rep(2006, times=28835)
+corn_2006$year<-c
+
+#add soil NO3 to output.hru file
+sil_2006<-soil[104468:108482,]
+soil_2006<-sil_2006 %>% aggregate(.~day,., mean)
+corn_2006_no3<-merge(corn_2006, soil_2006, by="day")
+
+#add wfps to output.hru file and reorder it as day to match the order of soil NO3 and simulated denitrification. 
+#Without reordering, the order is with hru.
+corn_2006_to<-merge(corn_2006, corn_hru, by="HRU")
+corn_2006_to<-corn_2006_to[order(corn_2006_to$day),]
+
+
+#the impact of soil NO3, soil C and soil moisture on the N2/N2O ratio
+rn2006<-RNO3_daycent(corn_2006_no3$soilNO3*3)
+rc2006<-RC_daycent(corn_2006$CMUPkg.ha)
+rw2006<-Rwfps_daycent(corn_2006_to$wfps)
+
+#calculate the limitation of soil NO3 and soil C
+N_C2006<-tibble(rn2006, rc2006)
+min2006<-as.tibble(apply(N_C2006, 1, min))
+
+#calculate the N2/N2O ratio
+r2006<-min2006*rw2006
+
+#partitioned daily N2O from denitrification at the HRu level
+corn_2006$n2O2006<-corn_2006$DNITkg.ha/(1+r2006)
+
+
+
+
+
