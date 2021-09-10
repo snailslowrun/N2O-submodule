@@ -1,0 +1,25 @@
+library(data.table)
+library(tidyverse)
+library(readxl)
+
+#Using CORN as an example
+
+CORN<-read.table("E:/SWAT_N_Bilanzen/Melk/Corn/corn.txt", header = T, sep = ",")
+corn_hru<-read_excel("E:/SWAT_N_Bilanzen/Melk/Melk_crop/HRU_CROP.xlsx", sheet=5)
+soil<-read.table("E:/SWAT_N_Bilanzen/Melk/output_sol/corn_no3.txt", header=T, sep=",")
+
+
+RNO3_daycent<- function(NO3){
+  frno3<- (1-(0.5 + (1*atan(pi * 0.01 * (NO3 - 190)))/ pi)) * 25
+  return(frno3)
+}
+
+RC_daycent<-function(CO2){
+  frc<- 13 + (30.78 * atan(pi * 0.07 * (CO2 - 13)))/pi
+  return(frc)
+}
+
+Rwfps_daycent<- function(WFPS){
+  frwfps<- 1.4/ 13^ (17 / 13^ (2.2 * WFPS))
+  return(frwfps)
+}
