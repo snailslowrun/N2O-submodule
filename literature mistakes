@@ -1,0 +1,77 @@
+################parton et al. (1996) mistake
+FrNO3_Pa<-function(NO3){
+  Frno3<-1- (0.5 + (1 * atan(pi * 0.01 * (NO3 - 190)))/ pi) * 25
+  return(Frno3)
+}
+
+
+FrNO3_Co<- function(NO3){
+  frno3<- (1-(0.5 + (1*atan(pi * 0.01 * (NO3 - 190)))/ pi)) * 25
+  return(frno3)
+}
+
+
+no3<-runif(200, 0, 350)
+
+pano3<-FrNO3_Pa(no3)
+cono3<-FrNO3_Co(no3)
+
+
+no3together<-as.tibble(cbind(no3, cono3, pano3 ))
+colnames(no3together)<-c("no3", "Correction", "Parton et al. (1996)")
+no3_gather<-gather(no3together, key = "sim", value = "value", -no3)
+
+ggplot()+
+  geom_line(aes(x=no3_gather$no3, y=no3_gather$value, col=as.factor(no3_gather$sim)), size=1)+
+  scale_color_manual(name="", values = c("blue", "red"))+
+  labs(x="NO3 [ug N g-1]", y="Fr(NO3)", col="")+
+  theme(panel.background = element_blank(),
+        axis.line.x = element_line(),
+        axis.line.y = element_line(),
+        legend.position = c(0.8,0.8),
+        legend.key = element_blank(),
+        axis.text.x = element_text(size = 13),
+      axis.text.y = element_text(size = 13),
+      axis.title.x = element_text(size = 16),
+      axis.title.y = element_text(size = 16))
+  guides(shape = guide_legend(override.aes = list(size = 3)),
+         col= guide_legend(override.aes = list(size=3)))
+
+
+####################################Wagena et al. (2017) mistake
+FrWFPS_wa <- function(WFPS){
+  frwa<-1.4 / (13 ^ 13 ^ (17/ (2.2 * WFPS)))
+  return(frwa)
+}
+  
+FrWFPS_pa<- function(WFPS){
+  frpa<- 1.4 / (13^ (17/ 13 ^ ( 2.2 * WFPS)))
+  return(frpa)
+}
+ 
+WFPS<-runif(200, 0,1)
+
+
+wafr<-FrWFPS_wa(WFPS)
+pafr<-FrWFPS_pa(WFPS)
+
+frwfps<-as.tibble(cbind(WFPS, pafr, wafr))
+colnames(frwfps)<-c("WFPS", "Parton et al. (1996)", "Wagena et al. (2017)")
+fr_gather<-gather(frwfps, key = "sim", value = "value", -WFPS)
+
+ggplot()+
+  geom_line(aes(x=fr_gather$WFPS, y=fr_gather$value, col=as.factor(fr_gather$sim)),size=1)+
+  scale_color_manual(name="", values = c("blue", "red"))+
+  labs(x="WFPS", y="Fr(WFPS)", col="")+
+  theme(panel.background = element_blank(),
+        axis.line.x = element_line(),
+        axis.line.y = element_line(),
+        legend.position = c(0.4,0.8),
+        legend.key = element_blank(),
+        axis.text.x = element_text(size = 13),
+        axis.text.y = element_text(size = 13),
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16))
+  guides(shape = guide_legend(override.aes = list(size = 3)),
+         col= guide_legend(override.aes = list(size=3)))
+  
